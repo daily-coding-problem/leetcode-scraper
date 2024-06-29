@@ -46,6 +46,12 @@ Before you begin, ensure you have met the following requirements:
     docker compose build
     ```
 
+4. **Create the Network**
+
+	```sh
+	docker network create dcp
+	```
+
 ## Configuration
 
 **Environment Variables**
