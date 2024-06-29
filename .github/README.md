@@ -31,10 +31,10 @@ Before you begin, ensure you have met the following requirements:
 
 1. **Clone the Repository**
 
-    ```sh
-    git clone https://github.com/your-username/leetcode-scraper.git
-    cd leetcode-scraper
-    ```
+```sh
+git clone https://github.com/your-username/leetcode-scraper.git
+cd leetcode-scraper
+```
 
 2. **Setup Docker**
 
@@ -42,15 +42,15 @@ Before you begin, ensure you have met the following requirements:
 
 3. **Build Docker Images**
 
-    ```sh
-    docker compose build
-    ```
+```sh
+docker compose build
+```
 
 4. **Create the Network**
 
-	```sh
-	docker network create dcp
-	```
+```sh
+docker network create dcp
+```
 
 ## Configuration
 
@@ -58,17 +58,17 @@ Before you begin, ensure you have met the following requirements:
 
    Create a `.env` file in the project root with the following content:
 
-    ```env
-    # LeetCode credentials
-    CSRF_TOKEN=your_csrf_token
-    LEETCODE_SESSION=your_leetcode_session
+```env
+# LeetCode credentials
+CSRF_TOKEN=your_csrf_token
+LEETCODE_SESSION=your_leetcode_session
 
-    # PostgreSQL credentials
-    POSTGRES_USER=your_db_user
-    POSTGRES_PASSWORD=your_db_password
-    POSTGRES_DB=your_db_name
-    POSTGRES_PORT=5432
-    ```
+# PostgreSQL credentials
+POSTGRES_USER=your_db_user
+POSTGRES_PASSWORD=your_db_password
+POSTGRES_DB=your_db_name
+POSTGRES_PORT=5432
+```
 
 ## Usage
 
@@ -76,9 +76,9 @@ Before you begin, ensure you have met the following requirements:
 
    Run the scraper with the specified plans:
 
-    ```sh
-    docker compose run leetcode-scraper --plans leetcode-75 top-interview-150
-    ```
+```sh
+docker compose run leetcode-scraper --plans leetcode-75 top-interview-150
+```
 
 ## Project Structure
 
