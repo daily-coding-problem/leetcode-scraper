@@ -107,6 +107,9 @@ poetry run pytest
 
 ```
 leetcode-scraper/
+├── .github/
+│   ├── workflows/
+│   │   └── python-tests.yml
 ├── database/
 │   ├── __init__.py
 │   ├── database.py
@@ -125,6 +128,7 @@ leetcode-scraper/
 ├── .env
 ├── docker-compose.yml
 ├── Dockerfile
+├── .pre-commit-config.yaml
 ├── main.py
 ├── pyproject.toml
 ├── README.md
