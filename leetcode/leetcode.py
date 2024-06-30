@@ -39,12 +39,12 @@ def _fetch_with_retries(fetch_func, max_retries=5, delay=2, backoff=2):
 
 
 class LeetCode:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, database: Database = None):
         self.client = client
+        self.database = database
 
         self.problems: Dict[str, Problem] = {}
         self.study_plans: Dict[str, StudyPlan] = {}
-        self.database = Database()
 
     def _fetch_and_store_problem(self, slug: str) -> Problem:
         """

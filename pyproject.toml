@@ -17,6 +17,7 @@ psycopg2 = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.1"
+pytest = "^8.2.2"
 
 [build-system]
 requires = ["poetry-core"]

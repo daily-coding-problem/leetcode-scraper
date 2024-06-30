@@ -46,15 +46,19 @@ def execute_query(cursor, connection, sql: str, params: Dict[str, Any]) -> bool:
 
 
 class Database:
-    def __init__(self):
-        self.connection = psycopg2.connect(
-            dbname=os.getenv('POSTGRES_DB'),
-            user=os.getenv('POSTGRES_USER'),
-            password=os.getenv('POSTGRES_PASSWORD'),
-            host=os.getenv('POSTGRES_HOST'),
-            port=os.getenv('POSTGRES_PORT')
-        )
-        self.cursor = self.connection.cursor()
+    def __init__(self, connection=None, cursor=None):
+        if connection is None or cursor is None:
+            self.connection = psycopg2.connect(
+                dbname=os.getenv('POSTGRES_DB'),
+                user=os.getenv('POSTGRES_USER'),
+                password=os.getenv('POSTGRES_PASSWORD'),
+                host=os.getenv('POSTGRES_HOST'),
+                port=os.getenv('POSTGRES_PORT')
+            )
+            self.cursor = self.connection.cursor()
+        else:
+            self.connection = connection
+            self.cursor = cursor
 
     def insert_problem(self, problem: Problem) -> Any | None:
         """
