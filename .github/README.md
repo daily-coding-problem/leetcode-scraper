@@ -78,6 +78,12 @@ Run the scraper with the specified plans:
 docker compose run leetcode-scraper --plans leetcode-75 top-interview-150
 ```
 
+Or without Docker:
+
+```sh
+poetry run python main.py --plans leetcode-75 top-interview-150
+```
+
 ## Running Tests
 
 Run the tests with the following command:
