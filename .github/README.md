@@ -32,7 +32,7 @@ Before you begin, ensure you have met the following requirements:
 **Clone the Repository**
 
 ```sh
-git clone https://github.com/your-username/leetcode-scraper.git
+git clone https://github.com/daily-coding-problem/leetcode-scraper.git
 cd leetcode-scraper
 ```
 
