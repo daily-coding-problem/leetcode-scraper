@@ -68,6 +68,6 @@ def load_config(config_path):
 
         exit(1)
 
-    with open(config_path, 'r') as config_file:
+    with open(config_path, "r") as config_file:
         content = config_file.read()
         return yaml.safe_load(content)

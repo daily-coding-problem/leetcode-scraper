@@ -12,7 +12,7 @@ class Configuration:
         :param key: The key to get the value for.
         :return: The value of the key.
         """
-        return self.auth.get(key, '')
+        return self.auth.get(key, "")
 
     def set(self, key: str, value: str):
         """

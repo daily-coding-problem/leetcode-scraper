@@ -6,19 +6,19 @@ from leetcode.problem import Problem
 
 
 class Difficulty(Enum):
-    EASY = 'easy'
-    MEDIUM = 'medium'
-    HARD = 'hard'
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
 
 
 class StudyPlan:
     def __init__(
         self,
         name: str,
-        slug: str = '',
-        description: str = '',
+        slug: str = "",
+        description: str = "",
         number_of_problems: int = 0,
-        number_of_categories: int = 0
+        number_of_categories: int = 0,
     ):
         """
         Initialize a StudyPlan with a given name.
@@ -94,9 +94,9 @@ class StudyPlan:
 
     def to_dict(self):
         return {
-            'name': self.name,
-            'slug': self.slug,
-            'description': self.description,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
         }
 
     def __repr__(self):

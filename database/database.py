@@ -49,11 +49,11 @@ class Database:
     def __init__(self, connection=None, cursor=None):
         if connection is None or cursor is None:
             self.connection = psycopg2.connect(
-                dbname=os.getenv('POSTGRES_DB'),
-                user=os.getenv('POSTGRES_USER'),
-                password=os.getenv('POSTGRES_PASSWORD'),
-                host=os.getenv('POSTGRES_HOST'),
-                port=os.getenv('POSTGRES_PORT')
+                dbname=os.getenv("POSTGRES_DB"),
+                user=os.getenv("POSTGRES_USER"),
+                password=os.getenv("POSTGRES_PASSWORD"),
+                host=os.getenv("POSTGRES_HOST"),
+                port=os.getenv("POSTGRES_PORT"),
             )
             self.cursor = self.connection.cursor()
         else:
@@ -91,7 +91,9 @@ class Database:
         """
         return execute_insert(self.cursor, self.connection, sql, study_plan.to_dict())
 
-    def insert_study_plan_problem(self, study_plan_id: int, problem_id: int, category_name: str) -> bool:
+    def insert_study_plan_problem(
+        self, study_plan_id: int, problem_id: int, category_name: str
+    ) -> bool:
         """
         Insert a problem into a study plan.
         :param study_plan_id: The ID of the study plan.
@@ -105,11 +107,16 @@ class Database:
         ON CONFLICT (study_plan_id, problem_id) DO UPDATE
         SET category_name = EXCLUDED.category_name;
         """
-        return execute_query(self.cursor, self.connection, sql, {
-            'study_plan_id': study_plan_id,
-            'problem_id': problem_id,
-            'category_name': category_name
-        })
+        return execute_query(
+            self.cursor,
+            self.connection,
+            sql,
+            {
+                "study_plan_id": study_plan_id,
+                "problem_id": problem_id,
+                "category_name": category_name,
+            },
+        )
 
     def get_problem_by_slug(self, slug: str) -> Problem | None:
         """
@@ -120,7 +127,7 @@ class Database:
         sql = """
         SELECT * FROM problems WHERE question_id = %(slug)s;
         """
-        self.cursor.execute(sql, {'slug': slug})
+        self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
         if result is None:
             return None
@@ -141,7 +148,7 @@ class Database:
         WHERE sp.slug = %(slug)s
         GROUP BY sp.slug, sp.name, sp.description;
         """
-        self.cursor.execute(sql, {'slug': slug})
+        self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
         if result is None:
             return None
@@ -150,7 +157,7 @@ class Database:
             name=result[1],
             description=result[2],
             number_of_problems=result[3],
-            number_of_categories=result[4]
+            number_of_categories=result[4],
         )
 
     def does_problem_exist(self, slug: str) -> bool:
@@ -162,7 +169,7 @@ class Database:
         sql = """
         SELECT EXISTS(SELECT 1 FROM problems WHERE question_id = %(slug)s);
         """
-        self.cursor.execute(sql, {'slug': slug})
+        self.cursor.execute(sql, {"slug": slug})
         return self.cursor.fetchone()[0]
 
     def does_study_plan_exist(self, slug: str) -> bool:
@@ -174,7 +181,7 @@ class Database:
         sql = """
         SELECT EXISTS(SELECT 1 FROM study_plans WHERE slug = %(slug)s);
         """
-        self.cursor.execute(sql, {'slug': slug})
+        self.cursor.execute(sql, {"slug": slug})
         return self.cursor.fetchone()[0]
 
     def close(self):

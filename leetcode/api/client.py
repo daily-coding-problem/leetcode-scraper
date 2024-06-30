@@ -14,12 +14,12 @@ class Client:
         :param configuration: A configuration object containing LeetCode session and CSRF token.
         """
         self.configuration = configuration
-        leetcode_session = configuration.get('leetcode_session')
-        csrf_token = configuration.get('csrf_token')
+        leetcode_session = configuration.get("leetcode_session")
+        csrf_token = configuration.get("csrf_token")
 
         if leetcode_session and not csrf_token:
             csrf_token = get_csrf_cookie(leetcode_session)
-            configuration.set('csrf_token', csrf_token)
+            configuration.set("csrf_token", csrf_token)
 
         self.leetcode_session = leetcode_session
         self.csrf_token = csrf_token
@@ -31,10 +31,10 @@ class Client:
         :return: A dictionary containing the headers.
         """
         return {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0',
-            'x-csrftoken': self.csrf_token,
-            'Cookie': f'LEETCODE_SESSION={self.leetcode_session}; csrftoken={self.csrf_token}'
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0",
+            "x-csrftoken": self.csrf_token,
+            "Cookie": f"LEETCODE_SESSION={self.leetcode_session}; csrftoken={self.csrf_token}",
         }
 
     def get_problem_details(self, slug: str) -> Dict[str, Any]:
@@ -45,8 +45,8 @@ class Client:
         :return: A dictionary containing the problem details.
         :raises Exception: If the API request fails or the response does not contain expected data.
         """
-        api_url = 'https://leetcode.com/graphql'
-        query = '''
+        api_url = "https://leetcode.com/graphql"
+        query = """
         query getQuestionDetail($titleSlug: String!) {
             question(titleSlug: $titleSlug) {
                 questionId
@@ -62,18 +62,20 @@ class Client:
                 hints
             }
         }
-        '''
-        variables = {'titleSlug': slug}
+        """
+        variables = {"titleSlug": slug}
         headers = self._get_headers()
 
-        response = requests.post(api_url, json={'query': query, 'variables': variables}, headers=headers)
+        response = requests.post(
+            api_url, json={"query": query, "variables": variables}, headers=headers
+        )
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         response_data = response.json()
-        if 'data' not in response_data or 'question' not in response_data['data']:
-            raise Exception('Problem not found or invalid response format')
+        if "data" not in response_data or "question" not in response_data["data"]:
+            raise Exception("Problem not found or invalid response format")
 
-        return response_data['data']['question']
+        return response_data["data"]["question"]
 
     def get_study_plan_details(self, plan_slug: str) -> Dict[str, Any]:
         """
@@ -83,8 +85,8 @@ class Client:
         :return: A dictionary containing the study plan details.
         :raises Exception: If the API request fails or the response does not contain expected data.
         """
-        api_url = 'https://leetcode.com/graphql'
-        query = '''
+        api_url = "https://leetcode.com/graphql"
+        query = """
         query studyPlanDetail($slug: String!) {
             studyPlanV2Detail(planSlug: $slug) {
                 slug
@@ -139,15 +141,20 @@ class Client:
                 }
             }
         }
-        '''
-        variables = {'slug': plan_slug}
+        """
+        variables = {"slug": plan_slug}
         headers = self._get_headers()
 
-        response = requests.post(api_url, json={'query': query, 'variables': variables}, headers=headers)
+        response = requests.post(
+            api_url, json={"query": query, "variables": variables}, headers=headers
+        )
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         response_data = response.json()
-        if 'data' not in response_data or 'studyPlanV2Detail' not in response_data['data']:
-            raise Exception('Study plan not found or invalid response format')
+        if (
+            "data" not in response_data
+            or "studyPlanV2Detail" not in response_data["data"]
+        ):
+            raise Exception("Study plan not found or invalid response format")
 
-        return response_data['data']['studyPlanV2Detail']
+        return response_data["data"]["studyPlanV2Detail"]

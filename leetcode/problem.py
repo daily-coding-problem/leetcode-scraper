@@ -10,7 +10,7 @@ class Problem:
         difficulty: str,
         topics: List[str],
         companies: List[str],
-        hints: List[str]
+        hints: List[str],
     ):
         self.id = id
         self.title = title
@@ -22,15 +22,16 @@ class Problem:
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'content': self.content,
-            'difficulty': self.difficulty,
-            'topics': self.topics,
-            'companies': self.companies,
-            'hints': self.hints
+            "id": self.id,
+            "title": self.title,
+            "content": self.content,
+            "difficulty": self.difficulty,
+            "topics": self.topics,
+            "companies": self.companies,
+            "hints": self.hints,
         }
 
     def __repr__(self):
-        return f"Problem(id={self.id}, title={self.title}, difficulty={self.difficulty})"
-
+        return (
+            f"Problem(id={self.id}, title={self.title}, difficulty={self.difficulty})"
+        )
