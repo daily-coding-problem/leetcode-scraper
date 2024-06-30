@@ -1,4 +1,4 @@
-# LeetCode Scraper
+# LeetCode Scraper [![Python Tests](https://github.com/daily-coding-problem/leetcode-scraper/actions/workflows/python-pytests.yml/badge.svg)](https://github.com/daily-coding-problem/leetcode-scraper/actions/workflows/python-pytests.yml)
 
 LeetCode Scraper is a Python-based tool designed to fetch and store details from LeetCode study plans into a PostgreSQL database. This tool leverages Docker for easy setup and environment management.
 
@@ -14,10 +14,10 @@ LeetCode Scraper is a Python-based tool designed to fetch and store details from
 
 ## Features
 
-- Fetches study plan details from LeetCode.
-- Stores study plan and problem details in a PostgreSQL database.
-- Supports Docker for easy setup and deployment.
-- Configurable through environment variables.
+- Fetches LeetCode problems and study plans
+- Stores data in a PostgreSQL database
+- Provides caching to reduce redundant requests
+- Handles rate limiting with retry mechanisms
 
 ## Prerequisites
 
@@ -29,24 +29,24 @@ Before you begin, ensure you have met the following requirements:
 
 ## Installation
 
-1. **Clone the Repository**
+**Clone the Repository**
 
 ```sh
 git clone https://github.com/your-username/leetcode-scraper.git
 cd leetcode-scraper
 ```
 
-2. **Setup Docker**
+**Setup Docker**
 
    Ensure Docker and Docker Compose are installed on your machine. If not, follow the installation guides for [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-3. **Build Docker Images**
+**Build Docker Images**
 
 ```sh
 docker compose build
 ```
 
-4. **Create the Network**
+**Create the Network**
 
 ```sh
 docker network create dcp
@@ -56,7 +56,7 @@ docker network create dcp
 
 **Environment Variables**
 
-   Create a `.env` file in the project root with the following content:
+Create a `.env` file in the project root with the following content:
 
 ```env
 # LeetCode credentials
@@ -72,12 +72,18 @@ POSTGRES_PORT=5432
 
 ## Usage
 
-**Run the Scraper**
-
-   Run the scraper with the specified plans:
+Run the scraper with the specified plans:
 
 ```sh
 docker compose run leetcode-scraper --plans leetcode-75 top-interview-150
+```
+
+## Running Tests
+
+Run the tests with the following command:
+
+```sh
+poetry run pytest
 ```
 
 ## Project Structure
@@ -93,6 +99,10 @@ leetcode-scraper/
 │   ├── client.py
 │   ├── problem.py
 │   ├── study_plan.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_database.py
+│   ├── test_leetcode.py
 ├── scripts/
 │   ├── entrypoint.sh
 ├── .env
