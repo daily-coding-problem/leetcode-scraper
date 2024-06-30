@@ -36,9 +36,20 @@ git clone https://github.com/your-username/leetcode-scraper.git
 cd leetcode-scraper
 ```
 
+**Setup Python Environment**
+
+Use the following commands to set up the Python environment if you do not want to use Docker:
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+pip install poetry
+poetry install --no-root
+```
+
 **Setup Docker**
 
-   Ensure Docker and Docker Compose are installed on your machine. If not, follow the installation guides for [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
+If you would like to use Docker, ensure Docker and Docker Compose are installed on your machine. If not, follow the installation guides for [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
 **Build Docker Images**
 
