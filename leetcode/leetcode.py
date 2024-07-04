@@ -73,7 +73,7 @@ class LeetCode:
 
         problem_data = {
             "id": question["questionId"],
-            "title": question["title"],
+            "slug": question["title"],
             "content": question["content"],
             "difficulty": question["difficulty"],
             "topics": (
@@ -181,9 +181,10 @@ class LeetCode:
         print(f"No. of available threads: {number_of_available_cores}")
 
         # Get maximum number of threads to use
-        max_threads = min(
-            number_of_available_cores, len(study_plan_data["planSubGroups"])
-        )
+        # max_threads = min(
+        #     number_of_available_cores, len(study_plan_data["planSubGroups"])
+        # )
+        max_threads = 1
         print(
             f"Using {max_threads} threads to fetch problems for study plan {plan_slug}"
         )

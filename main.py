@@ -2,6 +2,7 @@ import os
 import argparse
 from dotenv import load_dotenv
 
+from database.database import Database
 from leetcode.api.client import Client
 from leetcode.api.configuration import Configuration
 from leetcode.leetcode import LeetCode
@@ -26,7 +27,7 @@ def main(csrf_token, leetcode_session, plans):
     configuration.auth["leetcode_session"] = leetcode_session
 
     client = Client(configuration)
-    leetcode = LeetCode(client)
+    leetcode = LeetCode(client, database=Database())
 
     for plan in plans:
         print(f"Fetching study plan problems: {plan}")

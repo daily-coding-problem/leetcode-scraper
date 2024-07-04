@@ -67,15 +67,16 @@ class Database:
         :return: The ID of the inserted problem.
         """
         sql = """
-        INSERT INTO problems (question_id, title, content, difficulty, topics, companies, hints)
-        VALUES (%(id)s, %(title)s, %(content)s, %(difficulty)s, %(topics)s, %(companies)s, %(hints)s)
+        INSERT INTO problems (question_id, slug, content, difficulty, topics, companies, hints, link)
+        VALUES (%(id)s, %(slug)s, %(content)s, %(difficulty)s, %(topics)s, %(companies)s, %(hints)s, %(link)s)
         ON CONFLICT (question_id) DO UPDATE
-        SET title = EXCLUDED.title,
+        SET slug = EXCLUDED.slug,
             content = EXCLUDED.content,
             difficulty = EXCLUDED.difficulty,
             topics = EXCLUDED.topics,
             companies = EXCLUDED.companies,
-            hints = EXCLUDED.hints
+            hints = EXCLUDED.hints,
+            link = EXCLUDED.link
         RETURNING id;
         """
         return execute_insert(self.cursor, self.connection, sql, problem.to_dict())
@@ -167,7 +168,7 @@ class Database:
         :return: True if the problem exists, False otherwise.
         """
         sql = """
-        SELECT EXISTS(SELECT 1 FROM problems WHERE question_id = %(slug)s);
+        SELECT EXISTS(SELECT 1 FROM problems WHERE slug = %(slug)s);
         """
         self.cursor.execute(sql, {"slug": slug})
         return self.cursor.fetchone()[0]

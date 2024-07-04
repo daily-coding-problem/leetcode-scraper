@@ -16,7 +16,7 @@ class TestDatabase:
     def test_insert_problem(self, db):
         problem = Problem(
             id=1,
-            title="Two Sum",
+            slug="Two Sum",
             content="Given an array of integers...",
             difficulty="Easy",
             topics=["Array", "Hash Table"],
