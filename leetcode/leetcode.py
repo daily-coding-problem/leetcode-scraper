@@ -1,4 +1,5 @@
 import multiprocessing
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict
@@ -46,6 +47,10 @@ class LeetCode:
         self.problems: Dict[str, Problem] = {}
         self.study_plans: Dict[str, StudyPlan] = {}
 
+        self.problems_lock = threading.Lock()
+        self.study_plans_lock = threading.Lock()
+        self.database_lock = threading.Lock()
+
     def _fetch_and_store_problem(self, slug: str) -> Problem:
         """
         Fetch a problem from LeetCode by its slug and store it in the problems' dictionary.
@@ -55,16 +60,19 @@ class LeetCode:
         """
         print(f"Fetching problem {slug}")
 
-        if slug in self.problems:
-            problem = self.problems[slug]
-            print(f"Problem {problem.slug} already fetched")
-            return problem
+        with self.problems_lock:
+            if slug in self.problems:
+                problem = self.problems[slug]
+                print(f"Problem {problem.slug} already fetched")
+                return problem
 
-        if self.database.does_problem_exist(slug):
-            problem = self.database.get_problem_by_slug(slug)
-            print(f"Problem {problem.slug} already fetched")
-            self.problems[slug] = problem
-            return problem
+        with self.database_lock:
+            if self.database.does_problem_exist(slug):
+                problem = self.database.get_problem_by_slug(slug)
+                print(f"Problem {problem.slug} already fetched")
+                with self.problems_lock:
+                    self.problems[slug] = problem
+                return problem
 
         question = _fetch_with_retries(lambda: self.client.get_problem_details(slug))
 
@@ -73,7 +81,7 @@ class LeetCode:
 
         problem_data = {
             "id": question["questionId"],
-            "slug": question["title"],
+            "title": question["title"],
             "content": question["content"],
             "difficulty": question["difficulty"],
             "topics": (
@@ -91,9 +99,13 @@ class LeetCode:
 
         problem = Problem(**problem_data)
 
-        problem_id = self.database.insert_problem(
-            problem
-        )  # Store the problem in the database
+        try:
+            with self.database_lock:
+                problem_id = self.database.insert_problem(problem)
+        except Exception as e:
+            print(f"Error inserting problem into the database: {e}")
+            problem_id = None
+
         if problem_id is None:
             raise Exception(
                 "Error inserting problem into the database (Check the logs)"
@@ -103,7 +115,8 @@ class LeetCode:
             problem_id  # Set the ID of the problem to the ID returned by the database
         )
 
-        self.problems[slug] = problem  # Store the problem in the dictionary (Cache)
+        with self.problems_lock:
+            self.problems[slug] = problem  # Store the problem in the dictionary (Cache)
 
         return problem
 
@@ -123,16 +136,19 @@ class LeetCode:
         :param plan_slug: The slug of the study plan.
         :return: The fetched StudyPlan object.
         """
-        if plan_slug in self.study_plans:
-            study_plan = self.study_plans[plan_slug]
-            print(f"Study plan {study_plan.name} already fetched")
-            return study_plan
+        with self.study_plans_lock:
+            if plan_slug in self.study_plans:
+                study_plan = self.study_plans[plan_slug]
+                print(f"Study plan {study_plan.name} already fetched")
+                return study_plan
 
-        if self.database.does_study_plan_exist(plan_slug):
-            study_plan = self.database.get_study_plan_by_slug(plan_slug)
-            print(f"Study plan {study_plan.name} already fetched")
-            self.study_plans[plan_slug] = study_plan
-            return study_plan
+        with self.database_lock:
+            if self.database.does_study_plan_exist(plan_slug):
+                study_plan = self.database.get_study_plan_by_slug(plan_slug)
+                print(f"Study plan {study_plan.name} already fetched")
+                with self.study_plans_lock:
+                    self.study_plans[plan_slug] = study_plan
+                return study_plan
 
         # Fetch the study plan details
         study_plan_data = self.client.get_study_plan_details(plan_slug)
@@ -148,9 +164,8 @@ class LeetCode:
             study_plan_data["description"],
         )
 
-        study_plan_id = self.database.insert_study_plan(
-            study_plan
-        )  # Store the study plan in the database
+        with self.database_lock:
+            study_plan_id = self.database.insert_study_plan(study_plan)
         if study_plan_id is None:
             raise Exception(
                 "Error inserting study plan into the database (Check the logs)"
@@ -163,14 +178,14 @@ class LeetCode:
                     if question["titleSlug"] == slug:
                         study_plan.add_problem(category["name"], problem)
 
-                        response = self.database.insert_study_plan_problem(
-                            study_plan_id, problem.id, category["name"]
-                        )
+                        with self.database_lock:
+                            response = self.database.insert_study_plan_problem(
+                                study_plan_id, problem.id, category["name"]
+                            )
                         if response is None:
                             raise Exception(
                                 "Error inserting study plan problem into the database (Check the logs)"
                             )
-
                         break
 
         print(
@@ -181,10 +196,9 @@ class LeetCode:
         print(f"No. of available threads: {number_of_available_cores}")
 
         # Get maximum number of threads to use
-        # max_threads = min(
-        #     number_of_available_cores, len(study_plan_data["planSubGroups"])
-        # )
-        max_threads = 1
+        max_threads = min(
+            number_of_available_cores, len(study_plan_data["planSubGroups"])
+        )
         print(
             f"Using {max_threads} threads to fetch problems for study plan {plan_slug}"
         )
@@ -221,6 +235,11 @@ class LeetCode:
         )
 
         # Store the study plan in the dictionary
-        self.study_plans[plan_slug] = study_plan
+        with self.study_plans_lock:
+            self.study_plans[plan_slug] = study_plan
+
+        # Update the number of problems and categories in the study plan
+        study_plan.number_of_problems = study_plan.get_number_of_problems()
+        study_plan.number_of_categories = study_plan.get_number_of_categories()
 
         return study_plan

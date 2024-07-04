@@ -17,9 +17,14 @@ def execute_insert(cursor, connection, sql: str, params: Dict[str, Any]) -> Any:
     """
     try:
         cursor.execute(sql, params)
-        result_id = cursor.fetchone()[0]
-        connection.commit()
-        return result_id
+        result = cursor.fetchone()
+        if result is not None:
+            result_id = result[0]
+            connection.commit()
+            return result_id
+        else:
+            connection.commit()
+            return None
     except Exception as e:
         connection.rollback()
         print(f"Error executing insert: {e}")
@@ -67,10 +72,11 @@ class Database:
         :return: The ID of the inserted problem.
         """
         sql = """
-        INSERT INTO problems (question_id, slug, content, difficulty, topics, companies, hints, link)
-        VALUES (%(id)s, %(slug)s, %(content)s, %(difficulty)s, %(topics)s, %(companies)s, %(hints)s, %(link)s)
+        INSERT INTO problems (question_id, title, slug, content, difficulty, topics, companies, hints, link)
+        VALUES (%(id)s, %(title)s, %(slug)s, %(content)s, %(difficulty)s, %(topics)s, %(companies)s, %(hints)s, %(link)s)
         ON CONFLICT (question_id) DO UPDATE
-        SET slug = EXCLUDED.slug,
+        SET title = EXCLUDED.title,
+            slug = EXCLUDED.slug,
             content = EXCLUDED.content,
             difficulty = EXCLUDED.difficulty,
             topics = EXCLUDED.topics,
@@ -126,7 +132,7 @@ class Database:
         :return: The Problem object with the given slug, or None if not found.
         """
         sql = """
-        SELECT * FROM problems WHERE question_id = %(slug)s;
+        SELECT * FROM problems WHERE slug = %(slug)s;
         """
         self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
@@ -171,7 +177,12 @@ class Database:
         SELECT EXISTS(SELECT 1 FROM problems WHERE slug = %(slug)s);
         """
         self.cursor.execute(sql, {"slug": slug})
-        return self.cursor.fetchone()[0]
+
+        try:
+            result = self.cursor.fetchone()
+            return result[0]
+        except Exception:
+            return False
 
     def does_study_plan_exist(self, slug: str) -> bool:
         """
@@ -183,7 +194,12 @@ class Database:
         SELECT EXISTS(SELECT 1 FROM study_plans WHERE slug = %(slug)s);
         """
         self.cursor.execute(sql, {"slug": slug})
-        return self.cursor.fetchone()[0]
+
+        try:
+            result = self.cursor.fetchone()
+            return result[0]
+        except Exception:
+            return False
 
     def close(self):
         self.cursor.close()

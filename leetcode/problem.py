@@ -5,7 +5,7 @@ class Problem:
     def __init__(
         self,
         id: int,
-        slug: str,
+        title: str,
         content: str,
         difficulty: str,
         topics: List[str],
@@ -13,19 +13,21 @@ class Problem:
         hints: List[str],
     ):
         self.id = id
-        self.slug = slug
+        self.title = title
         self.content = content
         self.difficulty = difficulty
         self.topics = topics
         self.companies = companies
         self.hints = hints
 
+        self.slug = title.lower().replace(" ", "-")
         self.link = f"https://leetcode.com/problems/{self.slug}/"
 
     def to_dict(self):
         return {
             "id": self.id,
             "slug": self.slug,
+            "title": self.title,
             "content": self.content,
             "difficulty": self.difficulty,
             "topics": self.topics,
@@ -35,4 +37,6 @@ class Problem:
         }
 
     def __repr__(self):
-        return f"Problem(id={self.id}, title={self.slug}, difficulty={self.difficulty}, link: {self.link})"
+        return (
+            f"Problem(id={self.id}, title={self.title}, difficulty={self.difficulty})"
+        )
