@@ -57,12 +57,12 @@ class LeetCode:
 
         if slug in self.problems:
             problem = self.problems[slug]
-            print(f"Problem {problem.title} already fetched")
+            print(f"Problem {problem.slug} already fetched")
             return problem
 
         if self.database.does_problem_exist(slug):
             problem = self.database.get_problem_by_slug(slug)
-            print(f"Problem {problem.title} already fetched")
+            print(f"Problem {problem.slug} already fetched")
             self.problems[slug] = problem
             return problem
 
