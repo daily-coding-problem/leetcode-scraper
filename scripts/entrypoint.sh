@@ -40,15 +40,4 @@ unset_env_var_if_arg "--leetcode-session" "LEETCODE_SESSION" "$@"
 
 # -------------------------------------------------------------------------------------
 
-# Activate the virtual environment
-source .venv/bin/activate
-
-# -------------------------------------------------------------------------------------
-
-# Install project dependencies
-poetry install --no-root
-printf "\n"
-
-# -------------------------------------------------------------------------------------
-
 poetry run python main.py "$@"
