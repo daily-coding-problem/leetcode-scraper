@@ -11,6 +11,7 @@ class Problem:
         topics: List[str],
         companies: List[str],
         hints: List[str],
+        link: str,
     ):
         self.id = id
         self.title = title
@@ -18,7 +19,8 @@ class Problem:
         self.difficulty = difficulty
         self.topics = topics
         self.companies = companies
-        self.hints = hints
+        self.hints = (hints,)
+        self.link = link
 
     def to_dict(self):
         return {
@@ -29,6 +31,7 @@ class Problem:
             "topics": self.topics,
             "companies": self.companies,
             "hints": self.hints,
+            "link": self.link,
         }
 
     def __repr__(self):

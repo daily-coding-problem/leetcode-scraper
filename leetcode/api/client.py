@@ -75,6 +75,11 @@ class Client:
         if "data" not in response_data or "question" not in response_data["data"]:
             raise Exception("Problem not found or invalid response format")
 
+        # Add the link to the problem details
+        response_data["data"]["question"][
+            "link"
+        ] = f"https://leetcode.com/problems/{slug}/"
+
         return response_data["data"]["question"]
 
     def get_study_plan_details(self, plan_slug: str) -> Dict[str, Any]:
