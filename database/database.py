@@ -72,7 +72,7 @@ class Database:
         :return: The ID of the inserted problem.
         """
         sql = """
-        INSERT INTO problems (question_id, title, slug, content, difficulty, topics, companies, hints, link)
+        INSERT INTO leetcode.problems (question_id, title, slug, content, difficulty, topics, companies, hints, link)
         VALUES (%(id)s, %(title)s, %(slug)s, %(content)s, %(difficulty)s, %(topics)s, %(companies)s, %(hints)s, %(link)s)
         ON CONFLICT (question_id) DO UPDATE
         SET title = EXCLUDED.title,
@@ -89,7 +89,7 @@ class Database:
 
     def insert_study_plan(self, study_plan: StudyPlan) -> Any | None:
         sql = """
-        INSERT INTO study_plans (slug, name, description)
+        INSERT INTO leetcode.study_plans (slug, name, description)
         VALUES (%(slug)s, %(name)s, %(description)s)
         ON CONFLICT (slug) DO UPDATE
         SET name = EXCLUDED.name,
@@ -109,7 +109,7 @@ class Database:
         :return: True if the operation was successful, False otherwise.
         """
         sql = """
-        INSERT INTO study_plan_problems (study_plan_id, problem_id, category_name)
+        INSERT INTO leetcode.study_plan_problems (study_plan_id, problem_id, category_name)
         VALUES (%(study_plan_id)s, %(problem_id)s, %(category_name)s)
         ON CONFLICT (study_plan_id, problem_id) DO UPDATE
         SET category_name = EXCLUDED.category_name;
@@ -132,7 +132,7 @@ class Database:
         :return: The Problem object with the given slug, or None if not found.
         """
         sql = """
-        SELECT * FROM problems WHERE slug = %(slug)s;
+        SELECT * FROM leetcode.problems WHERE slug = %(slug)s;
         """
         self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
@@ -150,8 +150,8 @@ class Database:
         SELECT sp.slug, sp.name, sp.description,
                COUNT(DISTINCT spp.problem_id) AS number_of_problems,
                COUNT(DISTINCT spp.category_name) AS number_of_categories
-        FROM study_plans sp
-        LEFT JOIN study_plan_problems spp ON sp.id = spp.study_plan_id
+        FROM leetcode.study_plans sp
+        LEFT JOIN leetcode.study_plan_problems spp ON sp.id = spp.study_plan_id
         WHERE sp.slug = %(slug)s
         GROUP BY sp.slug, sp.name, sp.description;
         """
@@ -174,7 +174,7 @@ class Database:
         :return: True if the problem exists, False otherwise.
         """
         sql = """
-        SELECT EXISTS(SELECT 1 FROM problems WHERE slug = %(slug)s);
+        SELECT EXISTS(SELECT 1 FROM leetcode.problems WHERE slug = %(slug)s);
         """
         self.cursor.execute(sql, {"slug": slug})
 
@@ -191,7 +191,7 @@ class Database:
         :return: True if the study plan exists, False otherwise.
         """
         sql = """
-        SELECT EXISTS(SELECT 1 FROM study_plans WHERE slug = %(slug)s);
+        SELECT EXISTS(SELECT 1 FROM leetcode.study_plans WHERE slug = %(slug)s);
         """
         self.cursor.execute(sql, {"slug": slug})
 
