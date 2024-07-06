@@ -14,7 +14,6 @@ LeetCode Scraper is a Python-based tool designed to fetch and store details from
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [Project Structure](#project-structure)
 - [License](#license)
 
 ## Features
@@ -106,37 +105,6 @@ Run the tests with the following command:
 
 ```sh
 poetry run pytest
-```
-
-## Project Structure
-
-```
-leetcode-scraper/
-├── .github/
-│   ├── workflows/
-│   │   └── python-tests.yml
-├── database/
-│   ├── __init__.py
-│   ├── database.py
-├── leetcode/
-│   ├── __init__.py
-│   ├── leetcode.py
-│   ├── client.py
-│   ├── problem.py
-│   ├── study_plan.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_database.py
-│   ├── test_leetcode.py
-├── scripts/
-│   ├── entrypoint.sh
-├── .env
-├── docker-compose.yml
-├── Dockerfile
-├── .pre-commit-config.yaml
-├── main.py
-├── pyproject.toml
-├── README.md
 ```
 
 ## License
