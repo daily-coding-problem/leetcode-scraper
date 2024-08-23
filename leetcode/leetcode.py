@@ -131,11 +131,14 @@ class LeetCode:
         """
         return self.problems[slug] if slug in self.problems else None
 
-    def fetch_and_store_company_problems(self, company: str) -> List[Problem]:
+    def fetch_and_store_company_problems(
+        self, company: str, timeframe: str
+    ) -> List[Problem]:
         """
         Fetch problems from LeetCode by the company tag and store them in the companies' dictionary.
 
         :param company: The company tag.
+        :param timeframe: The timeframe for questions (e.g., '30d', '3m', '6m').
         :return: A dictionary of fetched Problem objects with the company tag as the key.
         """
         with self.companies_lock:
@@ -153,8 +156,20 @@ class LeetCode:
 
         company_problems = []
 
+        # convert 30d, 3m, 6m to 'last-30-days', 'three-months', 'six-months'
+        if timeframe == "30d":
+            timeframe = "last-30-days"
+        elif timeframe == "3m":
+            timeframe = "three-months"
+        elif timeframe == "6m":
+            timeframe = "six-months"
+        else:
+            timeframe = "six-months"
+
         questions = _fetch_with_retries(
-            lambda: self.client.get_recent_questions_for_company(company)
+            lambda: self.client.get_recent_questions_for_company(
+                company, timeframe=timeframe
+            ),
         )
 
         if not questions:

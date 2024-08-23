@@ -99,6 +99,20 @@ Or without Docker:
 poetry run python main.py --plans leetcode-75 top-interview-150
 ```
 
+### Want to fetch the most asked questions for a specific company in the last N months or days?
+
+```sh
+docker compose run leetcode-scraper --company google --timeframe 3m
+```
+
+Or without Docker:
+
+```sh
+poetry run python main.py --company google --timeframe 3m
+```
+
+This will fetch the most asked questions at Google in the last 3 months.
+
 ## Running Tests
 
 Run the tests with the following command:

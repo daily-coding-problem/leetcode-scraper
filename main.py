@@ -13,7 +13,9 @@ from utilities.poetry import get_name, get_description, get_authors, get_version
 load_dotenv()
 
 
-def main(csrf_token, leetcode_session, plans, company):
+def main(args):
+    [csrf_token, leetcode_session, plans, company, timeframe] = args
+
     if not leetcode_session and not csrf_token:
         print(
             "Using Non-Premium LeetCode account. Some premium only data will not be returned."
@@ -42,9 +44,11 @@ def main(csrf_token, leetcode_session, plans, company):
                 print(e)
 
     if company:
-        print(f"Fetching company related problems: {company}")
+        print(f"Fetching company related problems: {company} for {timeframe}")
         try:
-            company_problems = leetcode.fetch_and_store_company_problems(company)
+            company_problems = leetcode.fetch_and_store_company_problems(
+                company, timeframe
+            )
             print(
                 "====================================================================================================="
             )
@@ -91,7 +95,13 @@ if __name__ == "__main__":
         default=None,
         help="Company name to filter problems by",
     )
+    parser.add_argument(
+        "--timeframe",
+        type=str,
+        default="6m",
+        help="The timeframe for questions (e.g., 'last-30-days', 'three-months', 'six-months')",
+    )
 
     args = parser.parse_args()
 
-    main(args.csrf_token, args.leetcode_session, args.plans, args.company)
+    main(args)
