@@ -21,7 +21,7 @@ jobs:
             -   name: Set up Python
                 uses: actions/setup-python@v4
                 with:
-                    python-version: '3.12'
+                    python-version: '3.9'
 
             -   name: Install dependencies
                 run: |
@@ -30,6 +30,9 @@ jobs:
                     pip install --upgrade pip
                     pip install poetry
                     poetry install
+
+            - name: Set PYTHONPATH
+              run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
 
             -   name: Run tests
                 run: |
