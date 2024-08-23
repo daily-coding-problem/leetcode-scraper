@@ -32,7 +32,7 @@ jobs:
                     poetry install
 
             - name: Set PYTHONPATH
-              run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+              run: echo "PYTHONPATH=$(pwd):$(pwd)/tests" >> $GITHUB_ENV
 
             -   name: Run tests
                 run: |
