@@ -31,9 +31,6 @@ jobs:
                     pip install poetry
                     poetry install
 
-            - name: Set PYTHONPATH
-              run: echo "PYTHONPATH=$(pwd):$(pwd)/tests" >> $GITHUB_ENV
-
             -   name: Run tests
                 run: |
                     source .venv/bin/activate

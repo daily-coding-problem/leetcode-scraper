@@ -22,3 +22,11 @@ services:
         entrypoint: ["/usr/src/app/entrypoint.sh"]
         networks:
             - dcp
+
+    # Mimic the GitHub Actions job for running Python tests
+    python-pytests:
+        build:
+            context: .
+        user: root
+#        entrypoint: ["/bin/bash"] # To get an interactive shell
+        entrypoint: ["poetry", "run", "pytest"]
