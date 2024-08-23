@@ -201,6 +201,38 @@ class Database:
         except Exception:
             return False
 
+    def does_company_exist(self, company: str) -> bool:
+        """
+        Check if a company exists in the database.
+        :param company: The name of the company.
+        :return: True if the company exists, False otherwise.
+        """
+        sql = """
+        SELECT EXISTS(SELECT 1 FROM leetcode.companies WHERE name = %(company)s);
+        """
+        self.cursor.execute(sql, {"company": company})
+
+        try:
+            result = self.cursor.fetchone()
+            return result[0]
+        except Exception:
+            return False
+
+    def get_problems_by_company(self, company: str) -> list[Problem]:
+        """
+        Get a list of problems by a specific company.
+        :param company: The name of the company.
+        :return: A list of Problem objects.
+        """
+        sql = """
+        SELECT p.id, p.question_id, p.title, p.slug, p.content, p.difficulty, p.topics, p.companies, p.hints, p.link
+        FROM leetcode.problems p
+        WHERE %(company)s = ANY(p.companies);
+        """
+        self.cursor.execute(sql, {"company": company})
+        results = self.cursor.fetchall()
+        return [Problem(*result) for result in results]
+
     def close(self):
         self.cursor.close()
         self.connection.close()

@@ -13,7 +13,7 @@ from utilities.poetry import get_name, get_description, get_authors, get_version
 load_dotenv()
 
 
-def main(csrf_token, leetcode_session, plans):
+def main(csrf_token, leetcode_session, plans, company):
     if not leetcode_session and not csrf_token:
         print(
             "Using Non-Premium LeetCode account. Some premium only data will not be returned."
@@ -29,14 +29,26 @@ def main(csrf_token, leetcode_session, plans):
     client = Client(configuration)
     leetcode = LeetCode(client, database=Database())
 
-    for plan in plans:
-        print(f"Fetching study plan problems: {plan}")
+    if plans:
+        for plan in plans:
+            print(f"Fetching study plan problems: {plan}")
+            try:
+                study_plan = leetcode.fetch_and_store_study_plan(plan)
+                print(
+                    "====================================================================================================="
+                )
+                print(study_plan)
+            except Exception as e:
+                print(e)
+
+    if company:
+        print(f"Fetching company related problems: {company}")
         try:
-            study_plan = leetcode.fetch_and_store_study_plan(plan)
+            company_problems = leetcode.fetch_and_store_company_problems(company)
             print(
                 "====================================================================================================="
             )
-            print(study_plan)
+            print(company_problems)
         except Exception as e:
             print(e)
 
@@ -70,10 +82,16 @@ if __name__ == "__main__":
         "--plans",
         type=str,
         nargs="+",
-        default=["top-interview-150", "leetcode-75"],
+        default=None,
         help="Slugs of the study plans to fetch",
+    )
+    parser.add_argument(
+        "--company",
+        type=str,
+        default=None,
+        help="Company name to filter problems by",
     )
 
     args = parser.parse_args()
 
-    main(args.csrf_token, args.leetcode_session, args.plans)
+    main(args.csrf_token, args.leetcode_session, args.plans, args.company)

@@ -2,7 +2,7 @@ import multiprocessing
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict
+from typing import Dict, List
 
 from requests import HTTPError, RequestException
 
@@ -46,9 +46,11 @@ class LeetCode:
 
         self.problems: Dict[str, Problem] = {}
         self.study_plans: Dict[str, StudyPlan] = {}
+        self.companies: Dict[str, List[Problem]] = {}
 
         self.problems_lock = threading.Lock()
         self.study_plans_lock = threading.Lock()
+        self.companies_lock = threading.Lock()
         self.database_lock = threading.Lock()
 
     def _fetch_and_store_problem(self, slug: str) -> Problem:
@@ -128,6 +130,45 @@ class LeetCode:
         :return: The Problem object with the given slug, or None if not found.
         """
         return self.problems[slug] if slug in self.problems else None
+
+    def fetch_and_store_company_problems(self, company: str) -> List[Problem]:
+        """
+        Fetch problems from LeetCode by the company tag and store them in the companies' dictionary.
+
+        :param company: The company tag.
+        :return: A dictionary of fetched Problem objects with the company tag as the key.
+        """
+        with self.companies_lock:
+            if company in self.companies:
+                print(f"Company {company} problems already fetched")
+                return self.companies[company]
+
+        with self.database_lock:
+            if self.database.does_company_exist(company):
+                company_problems = self.database.get_problems_by_company(company)
+                print(f"Company {company} problems already fetched")
+                with self.companies_lock:
+                    self.companies[company] = company_problems
+                return company_problems
+
+        company_problems = []
+
+        questions = _fetch_with_retries(
+            lambda: self.client.get_recent_questions_for_company(company)
+        )
+
+        if not questions:
+            raise Exception("No problems found for the company")
+
+        for question in questions:
+            slug = question["titleSlug"]
+            problem = self.get_problem(slug) or self._fetch_and_store_problem(slug)
+            company_problems[slug].append(problem)
+
+        with self.companies_lock:
+            self.companies[company] = company_problems
+
+        return company_problems
 
     def fetch_and_store_study_plan(self, plan_slug: str) -> StudyPlan:
         """

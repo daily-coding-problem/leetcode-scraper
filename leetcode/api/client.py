@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import requests
 
@@ -163,3 +163,71 @@ class Client:
             raise Exception("Study plan not found or invalid response format")
 
         return response_data["data"]["studyPlanV2Detail"]
+
+    def get_recent_questions_for_company(
+        self,
+        company_slug: str,
+        timeframe: str = "six-months",
+        difficulties=None,
+        top_n: int = 50,
+    ) -> Dict[str, Any]:
+        """
+        Fetch the top N most recently asked questions for a specific company within a given timeframe.
+
+        :param company_slug: The slug of the company (e.g., 'microsoft').
+        :param timeframe: The timeframe for questions (e.g., 'last-30-days', 'three-months', 'six-months').
+        :param difficulties: The list of difficulties to filter the questions (default is ['EASY', 'MEDIUM']).
+        :param top_n: The number of top questions to retrieve (default is 50).
+        :return: A dictionary containing the list of questions.
+        :raises Exception: If the API request fails or the response does not contain expected data.
+
+        """
+        if difficulties is None:
+            difficulties = ["EASY", "MEDIUM"]
+
+        api_url = "https://leetcode.com/graphql"
+        favorite_slug = f"{company_slug}-{timeframe}"
+        query = """
+        query favoriteQuestionListForCompany($favoriteSlug: String!, $filter: FavoriteQuestionFilterInput) {
+          favoriteQuestionList(favoriteSlug: $favoriteSlug, filter: $filter) {
+            questions {
+              difficulty
+              id
+              paidOnly
+              questionFrontendId
+              status
+              title
+              titleSlug
+              translatedTitle
+              isInMyFavorites
+              frequency
+              topicTags {
+                name
+                nameTranslated
+                slug
+              }
+            }
+          }
+        }
+        """
+        variables = {
+            "favoriteSlug": favorite_slug,
+            "filter": {"difficultyList": difficulties, "positionRoleTagSlug": ""},
+        }
+        headers = self._get_headers()
+
+        response = requests.post(
+            api_url, json={"query": query, "variables": variables}, headers=headers
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        response_data = response.json()
+        if (
+            "data" not in response_data
+            or "favoriteQuestionList" not in response_data["data"]
+            or "questions" not in response_data["data"]["favoriteQuestionList"]
+        ):
+            raise Exception("Questions not found or invalid response format")
+
+        # Limit to top N questions
+        return response_data["data"]["favoriteQuestionList"]["questions"][:top_n]
