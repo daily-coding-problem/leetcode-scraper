@@ -99,7 +99,7 @@ Or without Docker:
 poetry run python main.py --plans leetcode-75 top-interview-150
 ```
 
-### Want to fetch the most asked questions for a specific company in the last N months or days?
+Run the scraper with the specified company and timeframe:
 
 ```sh
 docker compose run leetcode-scraper --company google --timeframe 3m
