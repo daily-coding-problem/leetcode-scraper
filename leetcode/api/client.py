@@ -179,7 +179,7 @@ class Client:
         :param difficulties: The list of difficulties to filter the questions (default is ['EASY', 'MEDIUM']).
         :param top_n: The number of top questions to retrieve (default is 50).
         :return: A dictionary containing the list of questions.
-        :raises Exception: If the API request fails or the response does not contain expected data.
+        :raises Exception: If the company does not exist, or the API request fails or the response does not contain expected data.
 
         """
         if difficulties is None:
@@ -222,11 +222,16 @@ class Client:
         response.raise_for_status()  # Raise an exception for HTTP errors
 
         response_data = response.json()
+
         if (
             "data" not in response_data
-            or "favoriteQuestionList" not in response_data["data"]
-            or "questions" not in response_data["data"]["favoriteQuestionList"]
+            or response_data["data"].get("favoriteQuestionList") is None
         ):
+            raise Exception(
+                f"No data found for company '{company_slug}' within the timeframe '{timeframe}'. The company might not exist or no questions are available."
+            )
+
+        if "questions" not in response_data["data"]["favoriteQuestionList"]:
             raise Exception("Questions not found or invalid response format")
 
         # Limit to top N questions
