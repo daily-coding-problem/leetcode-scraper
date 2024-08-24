@@ -113,7 +113,7 @@ poetry run python main.py --company google --timeframe 3m
 
 This will fetch the most asked questions at Google in the last 3 months.
 
-The options for `--timeframe` are: `30d`, 3m`, or `6m`.
+The options for `--timeframe` are: `30d`, `3m`, or `6m`.
 
 ## Running Tests
 
