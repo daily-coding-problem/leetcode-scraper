@@ -28,7 +28,7 @@ LeetCode Scraper is a Python-based tool designed to fetch and store details from
 Before you begin, ensure you have met the following requirements:
 
 - Docker and Docker Compose installed on your machine.
-- Python 3.12 or higher.
+- Python 3.9 or higher.
 - [PostgreSQL database](https://github.com/daily-coding-problem/database).
 
 ## Installation
