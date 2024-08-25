@@ -48,7 +48,7 @@ def convert_time_frame_to_str(timeframe: str, format_type: str = "default") -> s
     :return: The formatted timeframe.
     """
     # Mapping of timeframe abbreviations to their respective string representations
-    timeframes_pretty = {"30d": "30 days", "3m": "three months", "6m": "six months"}
+    timeframes_pretty = {"30d": "30 days", "3m": "3 months", "6m": "6 months"}
 
     timeframes_default = {
         "30d": "last-30-days",
