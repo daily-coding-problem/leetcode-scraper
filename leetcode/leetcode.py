@@ -39,6 +39,30 @@ def _fetch_with_retries(fetch_func, max_retries=5, delay=2, backoff=2):
     raise Exception("Max retries exceeded")
 
 
+def convert_time_frame_to_str(timeframe: str, format_type: str = "default") -> str:
+    """
+    Convert 30d, 3m, 6m to 'last-30-days', 'three-months', 'six-months'
+
+    :param timeframe: The timeframe to convert.
+    :param format_type: The format of the timeframe string.
+    :return: The formatted timeframe.
+    """
+    # Mapping of timeframe abbreviations to their respective string representations
+    timeframes_pretty = {"30d": "30 days", "3m": "three months", "6m": "six months"}
+
+    timeframes_default = {
+        "30d": "last-30-days",
+        "3m": "three-months",
+        "6m": "six-months",
+    }
+
+    # Choose the correct mapping based on the format type
+    timeframes = timeframes_pretty if format_type == "pretty" else timeframes_default
+
+    # Return the corresponding string or default to "six-months"
+    return timeframes.get(timeframe, "six-months")
+
+
 class LeetCode:
     def __init__(self, client: Client, database: Database = None):
         self.client = client
@@ -157,14 +181,7 @@ class LeetCode:
         company_problems = []
 
         # convert 30d, 3m, 6m to 'last-30-days', 'three-months', 'six-months'
-        if timeframe == "30d":
-            timeframe = "last-30-days"
-        elif timeframe == "3m":
-            timeframe = "three-months"
-        elif timeframe == "6m":
-            timeframe = "six-months"
-        else:
-            timeframe = "six-months"
+        timeframe = convert_time_frame_to_str(timeframe)
 
         questions = _fetch_with_retries(
             lambda: self.client.get_recent_questions_for_company(

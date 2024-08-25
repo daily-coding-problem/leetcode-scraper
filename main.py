@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from database.database import Database
 from leetcode.api.client import Client
 from leetcode.api.configuration import Configuration
-from leetcode.leetcode import LeetCode
+from leetcode.leetcode import LeetCode, convert_time_frame_to_str
 from utilities import print_random_banner
 from utilities.poetry import get_name, get_description, get_authors, get_version
 
@@ -44,7 +44,12 @@ def main(args):
                 print(e)
 
     if company:
-        print(f"Fetching company related problems: {company} for {timeframe}")
+        timeframe_str = convert_time_frame_to_str(timeframe, format_type="pretty")
+
+        print(
+            f"Fetching company related problems: {company} for the last {timeframe_str}"
+        )
+
         try:
             company_problems = leetcode.fetch_and_store_company_problems(
                 company, timeframe
