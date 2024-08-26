@@ -8,6 +8,54 @@ from leetcode.problem import Problem
 from leetcode.study_plan import StudyPlan
 
 
+def _create_study_plan_from_result(result) -> StudyPlan:
+    """
+    Create a StudyPlan object from a database result.
+    :param result: A tuple representing a row from the database query.
+    :return: A StudyPlan object.
+    """
+    slug = result[0]
+    name = result[1]
+    description = result[2]
+    expected_number_of_problems = result[3]
+    number_of_problems = result[4] if len(result) > 4 else None
+    number_of_categories = result[5] if len(result) > 5 else None
+
+    return StudyPlan(
+        slug=slug,
+        name=name,
+        description=description,
+        expected_number_of_problems=expected_number_of_problems,
+        number_of_problems=number_of_problems,
+        number_of_categories=number_of_categories,
+    )
+
+
+def _create_problem_from_result(result) -> Problem:
+    """
+    Create a Problem object from a database result.
+    :param result: A tuple representing a row from the database query.
+    :return: A Problem object.
+    """
+    problem_id = int(result[0])
+    title = result[1]
+    content = result[2]
+    difficulty = result[3]
+    topics = result[4] if result[4] else []
+    companies = result[5] if result[5] else []
+    hints = result[6] if result[6] else []
+
+    return Problem(
+        id=problem_id,
+        title=title,
+        content=content,
+        difficulty=difficulty,
+        topics=topics,
+        companies=companies,
+        hints=hints,
+    )
+
+
 def execute_insert(cursor, connection, sql: str, params: Dict[str, Any]) -> Any:
     """
     Execute an insert query and return the ID of the inserted row.
@@ -91,11 +139,12 @@ class Database:
 
     def insert_study_plan(self, study_plan: StudyPlan) -> Any | None:
         sql = """
-        INSERT INTO leetcode.study_plans (slug, name, description)
-        VALUES (%(slug)s, %(name)s, %(description)s)
+        INSERT INTO leetcode.study_plans (slug, name, description, expected_number_of_problems)
+        VALUES (%(slug)s, %(name)s, %(description)s, %(expected_number_of_problems)s)
         ON CONFLICT (slug) DO UPDATE
         SET name = EXCLUDED.name,
-            description = EXCLUDED.description
+            description = EXCLUDED.description,
+            expected_number_of_problems = EXCLUDED.expected_number_of_problems
         RETURNING id;
         """
         return execute_insert(self.cursor, self.connection, sql, study_plan.to_dict())
@@ -134,13 +183,19 @@ class Database:
         :return: The Problem object with the given slug, or None if not found.
         """
         sql = """
-        SELECT * FROM leetcode.problems WHERE slug = %(slug)s;
+        SELECT id, title, content, difficulty, topics, companies, hints
+        FROM leetcode.problems
+        WHERE slug = %(slug)s;
         """
         self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
+
         if result is None:
             return None
-        return Problem(*result)
+
+        problem = _create_problem_from_result(result)
+
+        return problem
 
     def get_study_plan_by_slug(self, slug: str) -> StudyPlan | None:
         """
@@ -149,25 +204,45 @@ class Database:
         :return: The StudyPlan object with the given slug, or None if not found.
         """
         sql = """
-        SELECT sp.slug, sp.name, sp.description,
+        SELECT sp.slug, sp.name, sp.description, sp.expected_number_of_problems,
                COUNT(DISTINCT spp.problem_id) AS number_of_problems,
                COUNT(DISTINCT spp.category_name) AS number_of_categories
         FROM leetcode.study_plans sp
         LEFT JOIN leetcode.study_plan_problems spp ON sp.id = spp.study_plan_id
         WHERE sp.slug = %(slug)s
-        GROUP BY sp.slug, sp.name, sp.description;
+        GROUP BY sp.slug, sp.name, sp.description, sp.expected_number_of_problems;
         """
         self.cursor.execute(sql, {"slug": slug})
         result = self.cursor.fetchone()
+
         if result is None:
             return None
-        return StudyPlan(
-            slug=result[0],
-            name=result[1],
-            description=result[2],
-            number_of_problems=result[3],
-            number_of_categories=result[4],
-        )
+
+        return _create_study_plan_from_result(result)
+
+    def get_problems_by_study_plan_slug(self, slug: str) -> list[Problem]:
+        """
+        Get a list of problems for a study plan.
+        :param slug: The slug of the study plan.
+        :return: A list of Problem objects.
+        """
+        sql = """
+        SELECT p.id, p.title, p.content, p.difficulty, p.topics, p.companies, p.hints
+        FROM leetcode.problems p
+        JOIN leetcode.study_plan_problems spp ON p.id = spp.problem_id
+        JOIN leetcode.study_plans sp ON spp.study_plan_id = sp.id
+        WHERE sp.slug = %(slug)s;
+        """
+        self.cursor.execute(sql, {"slug": slug})
+        results = self.cursor.fetchall()
+
+        problems = []
+        for result in results:
+            problem = _create_problem_from_result(result)
+
+            problems.append(problem)
+
+        return problems
 
     def does_problem_exist(self, slug: str) -> bool:
         """
@@ -220,6 +295,46 @@ class Database:
         except Exception:
             return False
 
+    def get_problem_count_by_study_plan(self, slug: str) -> int:
+        """
+        Get the number of problems in a study plan.
+        :param slug: The slug of the study plan.
+        :return: The number of problems in the study plan.
+        """
+        sql = """
+        SELECT COUNT(DISTINCT spp.problem_id)
+        FROM leetcode.study_plan_problems spp
+        JOIN leetcode.study_plans sp ON spp.study_plan_id = sp.id
+        WHERE sp.slug = %(slug)s;
+        """
+        self.cursor.execute(sql, {"slug": slug})
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return 0
+
+        return result[0]
+
+    def get_category_count_by_study_plan(self, slug: str) -> int:
+        """
+        Get the number of categories in a study plan.
+        :param slug: The slug of the study plan.
+        :return: The number of categories in the study plan.
+        """
+        sql = """
+        SELECT COUNT(DISTINCT spp.category_name)
+        FROM leetcode.study_plan_problems spp
+        JOIN leetcode.study_plans sp ON spp.study_plan_id = sp.id
+        WHERE sp.slug = %(slug)s;
+        """
+        self.cursor.execute(sql, {"slug": slug})
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return 0
+
+        return result[0]
+
     def get_problems_by_company(self, company: str) -> list[Problem]:
         """
         Get a list of problems by a specific company.
@@ -233,7 +348,11 @@ class Database:
         """
         self.cursor.execute(sql, {"company": company})
         results = self.cursor.fetchall()
-        return [Problem(*result) for result in results]
+
+        if results is None:
+            return []
+
+        return [_create_problem_from_result(result) for result in results]
 
     def close(self):
         self.cursor.close()

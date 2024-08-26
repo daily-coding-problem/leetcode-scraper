@@ -87,7 +87,7 @@ class Client:
         Fetch study plan details from LeetCode's GraphQL API using the provided plan slug.
 
         :param plan_slug: The slug of the study plan.
-        :return: A dictionary containing the study plan details.
+        :return: A dictionary containing the study plan details and the total number of problems.
         :raises Exception: If the API request fails or the response does not contain expected data.
         """
         api_url = "https://leetcode.com/graphql"
@@ -162,7 +162,17 @@ class Client:
         ):
             raise Exception("Study plan not found or invalid response format")
 
-        return response_data["data"]["studyPlanV2Detail"]
+        study_plan_details = response_data["data"]["studyPlanV2Detail"]
+
+        # Calculate the total number of problems in the study plan
+        total_problems = sum(
+            group.get("questionNum", 0) for group in study_plan_details["planSubGroups"]
+        )
+
+        # Add the total number of problems to the study plan details
+        study_plan_details["totalProblems"] = total_problems
+
+        return study_plan_details
 
     def get_recent_questions_for_company(
         self,

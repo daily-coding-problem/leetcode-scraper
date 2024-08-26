@@ -1,4 +1,5 @@
 import multiprocessing
+import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -202,6 +203,54 @@ class LeetCode:
 
         return company_problems
 
+    def _fetch_and_store_problems_for_study_plan(
+        self, study_plan_data: dict, add_problem_to_study_plan: callable, plan_slug: str
+    ) -> None:
+        """
+        Fetch and store problems for a study plan using multithreading.
+
+        :param study_plan_data: The raw study plan data fetched from LeetCode.
+        :param add_problem_to_study_plan: Function to add a fetched problem to the study plan.
+        :param plan_slug: The slug of the study plan.
+        """
+        print(
+            "====================================================================================================="
+        )
+        number_of_available_cores = multiprocessing.cpu_count()
+        # number_of_available_cores = 1 # for testing
+        print(f"No. of available threads: {number_of_available_cores}")
+
+        max_threads = min(
+            number_of_available_cores,
+            len(study_plan_data["planSubGroups"][0]["questions"]),
+        )
+        print(
+            f"Using {max_threads} threads to fetch problems for study plan {plan_slug}"
+        )
+        print(
+            "====================================================================================================="
+        )
+
+        # Fetch and store problems using multithreading
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            future_to_slug = {
+                executor.submit(
+                    self._fetch_and_store_problem, question["titleSlug"]
+                ): question["titleSlug"]
+                for category in study_plan_data["planSubGroups"]
+                for question in category["questions"]
+            }
+
+            for future in as_completed(future_to_slug):
+                slug = future_to_slug[future]
+                try:
+                    problem = future.result()
+                    print(f"Fetched problem {problem}")
+                    add_problem_to_study_plan(slug, problem)
+                    print(f"Added problem {slug} to study plan {plan_slug}")
+                except Exception as exc:
+                    print(f"Error fetching problem {slug}: {exc}")
+
     def fetch_and_store_study_plan(self, plan_slug: str) -> StudyPlan:
         """
         Fetch a study plan from LeetCode by its slug and store it in the study plan dictionary.
@@ -209,32 +258,95 @@ class LeetCode:
         :param plan_slug: The slug of the study plan.
         :return: The fetched StudyPlan object.
         """
-        with self.study_plans_lock:
-            if plan_slug in self.study_plans:
-                study_plan = self.study_plans[plan_slug]
-                print(f"Study plan {study_plan.name} already fetched")
-                return study_plan
+        if plan_slug in self.study_plans:
+            study_plan = self.study_plans[plan_slug]
+            print(f"Study plan {study_plan.name} already fetched")
+            return study_plan
 
-        with self.database_lock:
-            if self.database.does_study_plan_exist(plan_slug):
-                study_plan = self.database.get_study_plan_by_slug(plan_slug)
+        if self.database.does_study_plan_exist(plan_slug):
+            study_plan = self.database.get_study_plan_by_slug(plan_slug)
+
+            if (
+                study_plan.number_of_problems is not None
+                and study_plan.number_of_problems
+                == study_plan.expected_number_of_problems
+            ):
                 print(f"Study plan {study_plan.name} already fetched")
+
                 with self.study_plans_lock:
                     self.study_plans[plan_slug] = study_plan
+
+                study_plan.number_of_problems = (
+                    self.database.get_problem_count_by_study_plan(study_plan.slug)
+                )
+                study_plan.number_of_categories = (
+                    self.database.get_category_count_by_study_plan(study_plan.slug)
+                )
+
+                return study_plan
+
+            print(f"Study plan {study_plan.name} has incorrect number of problems")
+            print(f"Re-fetching the missing problems for study plan {study_plan.name}")
+
+            # Fetch the problems for this study plan from the database
+            problems = self.database.get_problems_by_study_plan_slug(study_plan.slug)
+
+            study_plan_data = self.client.get_study_plan_details(study_plan.slug)
+
+            problems_from_study_plan = [
+                question["titleSlug"]
+                for category in study_plan_data["planSubGroups"]
+                for question in category["questions"]
+            ]
+
+            # Extract slugs from the existing problems
+            existing_slugs = {problem.slug for problem in problems}
+
+            # Identify missing problems
+            missing_problems = [
+                slug for slug in problems_from_study_plan if slug not in existing_slugs
+            ]
+
+            # Fetch and store missing problems
+            if missing_problems:
+                print(
+                    f"Fetching {len(missing_problems)} missing problems for study plan {study_plan.name}"
+                )
+
+                self._fetch_and_store_problems_for_study_plan(
+                    study_plan_data={
+                        "planSubGroups": [
+                            {
+                                "questions": [
+                                    {"titleSlug": slug} for slug in missing_problems
+                                ]
+                            }
+                        ]
+                    },
+                    add_problem_to_study_plan=study_plan.add_problem,
+                    plan_slug=plan_slug,
+                )
+
+                study_plan.number_of_problems = (
+                    self.database.get_problem_count_by_study_plan(study_plan.slug)
+                )
+                study_plan.number_of_categories = (
+                    self.database.get_category_count_by_study_plan(study_plan.slug)
+                )
+
                 return study_plan
 
         # Fetch the study plan details
         study_plan_data = self.client.get_study_plan_details(plan_slug)
 
-        # Check if the study plan is valid
         if study_plan_data is None or "name" not in study_plan_data:
             raise Exception("Study plan not found")
 
-        # Initialize the StudyPlan object
         study_plan = StudyPlan(
-            study_plan_data["name"],
-            study_plan_data["slug"],
-            study_plan_data["description"],
+            name=study_plan_data["name"],
+            slug=study_plan_data["slug"],
+            description=study_plan_data["description"],
+            expected_number_of_problems=study_plan_data["totalProblems"],
         )
 
         with self.database_lock:
@@ -244,7 +356,6 @@ class LeetCode:
                 "Error inserting study plan into the database (Check the logs)"
             )
 
-        # Define a helper function to add problems to the study plan
         def add_problem_to_study_plan(slug: str, problem: Problem):
             for category in study_plan_data["planSubGroups"]:
                 for question in category["questions"]:
@@ -261,58 +372,21 @@ class LeetCode:
                             )
                         break
 
-        print(
-            "====================================================================================================="
-        )
-        # Maximum number of available CPU cores
-        number_of_available_cores = multiprocessing.cpu_count()
-        print(f"No. of available threads: {number_of_available_cores}")
-
-        # Get maximum number of threads to use
-        max_threads = min(
-            number_of_available_cores, len(study_plan_data["planSubGroups"])
-        )
-        print(
-            f"Using {max_threads} threads to fetch problems for study plan {plan_slug}"
-        )
-        print(
-            "====================================================================================================="
-        )
-
-        # Fetch and store problems using multithreading
-        with ThreadPoolExecutor(max_workers=max_threads) as executor:
-            # Create a dictionary to map futures to their respective slugs
-            future_to_slug = {
-                executor.submit(
-                    self._fetch_and_store_problem, question["titleSlug"]
-                ): question["titleSlug"]
-                for category in study_plan_data["planSubGroups"]
-                for question in category["questions"]
-            }
-
-            # Process the completed futures
-            for future in as_completed(future_to_slug):
-                slug = future_to_slug[future]
-                try:
-                    # Get the result (problem) from the future
-                    problem = future.result()
-                    print(f"Fetched problem {problem}")
-                    # Add the problem to the study plan
-                    add_problem_to_study_plan(slug, problem)
-                    print(f"Added problem {slug} to study plan {plan_slug}")
-                except Exception as exc:
-                    print(f"Error fetching problem {slug}: {exc}")
-
-        print(
-            f"Fetched {study_plan.get_number_of_problems()} problems for study plan {plan_slug}"
+        # Fetch and store all problems for the study plan
+        self._fetch_and_store_problems_for_study_plan(
+            study_plan_data=study_plan_data,
+            add_problem_to_study_plan=add_problem_to_study_plan,
+            plan_slug=plan_slug,
         )
 
         # Store the study plan in the dictionary
-        with self.study_plans_lock:
-            self.study_plans[plan_slug] = study_plan
+        self.study_plans[plan_slug] = study_plan
 
-        # Update the number of problems and categories in the study plan
-        study_plan.number_of_problems = study_plan.get_number_of_problems()
-        study_plan.number_of_categories = study_plan.get_number_of_categories()
+        study_plan.number_of_problems = self.database.get_problem_count_by_study_plan(
+            study_plan.slug
+        )
+        study_plan.number_of_categories = (
+            self.database.get_category_count_by_study_plan(study_plan.slug)
+        )
 
         return study_plan

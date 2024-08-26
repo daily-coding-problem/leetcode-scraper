@@ -30,6 +30,7 @@ class TestLeetCode:
             "name": "LeetCode 75",
             "slug": "leetcode-75",
             "description": "A study plan to master the most important 75 LeetCode problems.",
+            "totalProblems": 75,
             "planSubGroups": [
                 {
                     "name": "Array and Hash Table",

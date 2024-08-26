@@ -17,6 +17,7 @@ class StudyPlan:
         name: str,
         slug: str = "",
         description: str = "",
+        expected_number_of_problems: int = 0,
         number_of_problems: int = 0,
         number_of_categories: int = 0,
     ):
@@ -28,6 +29,7 @@ class StudyPlan:
         self.name = name
         self.slug = slug
         self.description = description
+        self.expected_number_of_problems = expected_number_of_problems
         self.number_of_problems = number_of_problems
         self.number_of_categories = number_of_categories
 
@@ -97,6 +99,7 @@ class StudyPlan:
             "name": self.name,
             "slug": self.slug,
             "description": self.description,
+            "expected_number_of_problems": self.expected_number_of_problems,
         }
 
     def __repr__(self):

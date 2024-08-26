@@ -14,7 +14,11 @@ load_dotenv()
 
 
 def main(args):
-    [csrf_token, leetcode_session, plans, company, timeframe] = args
+    csrf_token = args.csrf_token
+    leetcode_session = args.leetcode_session
+    plans = args.plans
+    company = args.company
+    timeframe = args.timeframe
 
     if not leetcode_session and not csrf_token:
         print(
@@ -32,7 +36,7 @@ def main(args):
     leetcode = LeetCode(client, database=Database())
 
     if plans:
-        for plan in plans:
+        for index, plan in enumerate(plans):
             print(f"Fetching study plan problems: {plan}")
             try:
                 study_plan = leetcode.fetch_and_store_study_plan(plan)
@@ -42,6 +46,11 @@ def main(args):
                 print(study_plan)
             except Exception as e:
                 print(e)
+
+            if (index + 1) < len(plans):
+                print(
+                    "====================================================================================================="
+                )
 
     if company:
         timeframe_str = convert_time_frame_to_str(timeframe, format_type="pretty")

@@ -4,6 +4,7 @@
 ![Linux](https://img.shields.io/badge/-Linux-FCC624?style=flat-square&logo=linux&logoColor=black)
 ![Python](https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Supabase](https://img.shields.io/badge/-Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
 
 LeetCode Scraper is a Python-based tool designed to fetch and store details from LeetCode study plans into a PostgreSQL database. This tool leverages Docker for easy setup and environment management.
 
@@ -19,7 +20,7 @@ LeetCode Scraper is a Python-based tool designed to fetch and store details from
 ## Features
 
 - Fetches LeetCode problems and study plans
-- Stores data in a PostgreSQL database
+- Stores data in a PostgreSQL/Supabase database
 - Provides caching to reduce redundant requests
 - Handles rate limiting with retry mechanisms
 
