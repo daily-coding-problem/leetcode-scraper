@@ -78,7 +78,7 @@ class LeetCode:
         self.database_lock = threading.Lock()
 
         user_data = _fetch_with_retries(lambda: self.client.get_user_data())
-        self.user = User(**user_data)
+        self.user = User(user_data)
 
     def fetch_and_store_problem(self, slug: str) -> Problem:
         """
