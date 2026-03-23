@@ -3,7 +3,7 @@ name = "leetcode-scraper"
 version = "1.0.0"
 description = "Fetch and store LeetCode study plan details."
 authors = ["Nicholas Adamou <nicholasadamouemail@gmail.com>"]
-license = "PolyForm-Shield-1.0.0"
+license = {text = "PolyForm-Shield-1.0.0"}
 readme = "README.md"
 package-mode = false
 
