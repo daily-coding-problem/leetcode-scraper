@@ -11,6 +11,7 @@ class Problem:
         topics: List[str],
         companies: List[str],
         hints: List[str],
+        solution: str = None,
     ):
         self.id = id
         self.title = title
@@ -19,6 +20,7 @@ class Problem:
         self.topics = topics
         self.companies = companies
         self.hints = hints
+        self.solution = solution
 
         self.slug = title.lower().replace(" ", "-")
         self.link = f"https://leetcode.com/problems/{self.slug}/"

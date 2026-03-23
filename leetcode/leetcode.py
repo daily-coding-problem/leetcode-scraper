@@ -1,5 +1,4 @@
 import multiprocessing
-import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,11 +6,11 @@ from typing import Dict, List
 
 from requests import HTTPError, RequestException
 
+from database.database import Database
 from leetcode.api.client import Client
 from leetcode.problem import Problem
 from leetcode.study_plan import StudyPlan
-
-from database.database import Database
+from leetcode.user import User
 
 
 def _fetch_with_retries(fetch_func, max_retries=5, delay=2, backoff=2):
@@ -78,7 +77,10 @@ class LeetCode:
         self.companies_lock = threading.Lock()
         self.database_lock = threading.Lock()
 
-    def _fetch_and_store_problem(self, slug: str) -> Problem:
+        user_data = _fetch_with_retries(lambda: self.client.get_user_data())
+        self.user = User(**user_data)
+
+    def fetch_and_store_problem(self, slug: str) -> Problem:
         """
         Fetch a problem from LeetCode by its slug and store it in the problems' dictionary.
 
@@ -96,9 +98,28 @@ class LeetCode:
         with self.database_lock:
             if self.database.does_problem_exist(slug):
                 problem = self.database.get_problem_by_slug(slug)
+
+                if problem.solution is None:
+                    print(f"Fetching official solution for problem {slug}")
+                    solution = _fetch_with_retries(lambda: self.client.get_official_solution(slug))
+
+                    if solution:
+                        print(f"Solution for problem {slug} found")
+                        problem.solution = solution
+
+                        self.database.update_problem_solution(problem.id, solution)
+                        print(f"Updated solution for problem {slug}")
+
+                        with self.problems_lock:
+                            self.problems[slug] = problem
+
+                        return problem
+
                 print(f"Problem {problem.slug} already fetched")
+
                 with self.problems_lock:
                     self.problems[slug] = problem
+
                 return problem
 
         question = _fetch_with_retries(lambda: self.client.get_problem_details(slug))
@@ -123,6 +144,11 @@ class LeetCode:
             ),
             "hints": question["hints"] if question["hints"] else [],
         }
+
+        print(f"Fetching official solution for problem {slug}")
+        solution = _fetch_with_retries(lambda: self.client.get_official_solution(slug))
+        if solution:
+            problem_data["solution"] = solution
 
         problem = Problem(**problem_data)
 
@@ -195,7 +221,7 @@ class LeetCode:
 
         for question in questions:
             slug = question["titleSlug"]
-            problem = self.get_problem(slug) or self._fetch_and_store_problem(slug)
+            problem = self.get_problem(slug) or self.fetch_and_store_problem(slug)
             company_problems[slug].append(problem)
 
         with self.companies_lock:
@@ -235,7 +261,7 @@ class LeetCode:
         with ThreadPoolExecutor(max_workers=max_threads) as executor:
             future_to_slug = {
                 executor.submit(
-                    self._fetch_and_store_problem, question["titleSlug"]
+                    self.fetch_and_store_problem, question["titleSlug"]
                 ): question["titleSlug"]
                 for category in study_plan_data["planSubGroups"]
                 for question in category["questions"]

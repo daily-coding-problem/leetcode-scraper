@@ -354,6 +354,22 @@ class Database:
 
         return [_create_problem_from_result(result) for result in results]
 
+    def update_problem_solution(self, problem_id: int, solution: str) -> bool:
+        """
+        Update the solution of a problem.
+        :param problem_id: The ID of the problem.
+        :param solution: The solution to update.
+        :return: True if the operation was successful, False otherwise.
+        """
+        sql = """
+        UPDATE leetcode.problems
+        SET solution = %(solution)s
+        WHERE id = %(problem_id)s;
+        """
+        return execute_query(
+            self.cursor, self.connection, sql, {"problem_id": problem_id, "solution": solution}
+        )
+
     def close(self):
         self.cursor.close()
         self.connection.close()

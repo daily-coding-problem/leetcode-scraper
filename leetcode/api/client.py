@@ -246,3 +246,116 @@ class Client:
 
         # Limit to top N questions
         return response_data["data"]["favoriteQuestionList"]["questions"][:top_n]
+
+
+    def get_user_data(self) -> Dict[str, Any]:
+        """
+        Fetches user status data from LeetCode's GraphQL API.
+
+        :return: A dictionary containing the user's status data.
+        :raises Exception: If the API request fails or the response does not contain expected data.
+        """
+        api_url = "https://leetcode.com/graphql"
+        query = """
+            query globalData {
+              userStatus {
+                userId
+                isSignedIn
+                isMockUser
+                isPremium
+                isVerified
+                username
+                realName
+                avatar
+                isAdmin
+                isSuperuser
+                permissions
+                isTranslator
+                activeSessionId
+                checkedInToday
+                completedFeatureGuides
+                notificationStatus {
+                  lastModified
+                  numUnread
+                }
+              }
+            }
+            """
+        headers = self._get_headers()
+        response = requests.post(api_url, json={"query": query}, headers=headers)
+        response.raise_for_status()
+
+        response_data = response.json()
+        if "data" not in response_data or "userStatus" not in response_data["data"]:
+            raise Exception("User status data not found or invalid response format")
+
+        return response_data["data"]["userStatus"]
+
+
+    def get_official_solution(self, title_slug: str) -> Dict[str, Any]:
+        """
+        Fetches the official solution for a problem using the title slug.
+
+        :param title_slug: The slug of the problem.
+        :return: A dictionary containing the official solution details.
+        :raises Exception: If the API request fails or the response does not contain expected data.
+        """
+        api_url = "https://leetcode.com/graphql"
+        query = """
+        query officialSolution($titleSlug: String!) {
+          question(titleSlug: $titleSlug) {
+            solution {
+              id
+              title
+              content
+              contentTypeId
+              paidOnly
+              hasVideoSolution
+              paidOnlyVideo
+              canSeeDetail
+              rating {
+                count
+                average
+                userRating {
+                  score
+                }
+              }
+              topic {
+                id
+                commentCount
+                topLevelCommentCount
+                viewCount
+                subscribed
+                solutionTags {
+                  name
+                  slug
+                }
+                post {
+                  id
+                  status
+                  creationDate
+                  author {
+                    username
+                    isActive
+                    profile {
+                      userAvatar
+                      reputation
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+        variables = {"titleSlug": title_slug}
+        headers = self._get_headers()
+
+        response = requests.post(api_url, json={"query": query, "variables": variables}, headers=headers)
+        response.raise_for_status()
+
+        response_data = response.json()
+        if "data" not in response_data or "question" not in response_data["data"]:
+            raise Exception("Solution not found or invalid response format")
+
+        return response_data["data"]["question"]["solution"]

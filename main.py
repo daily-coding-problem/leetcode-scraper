@@ -16,6 +16,7 @@ load_dotenv()
 def main(args):
     csrf_token = args.csrf_token
     leetcode_session = args.leetcode_session
+    problems = args.problems
     plans = args.plans
     company = args.company
     timeframe = args.timeframe
@@ -34,6 +35,23 @@ def main(args):
 
     client = Client(configuration)
     leetcode = LeetCode(client, database=Database())
+
+    if problems:
+        for index, problem in enumerate(problems):
+            print(f"Fetching problem details: {problem}")
+            try:
+                problem_details = leetcode.fetch_and_store_problem(problem)
+                print(
+                    "====================================================================================================="
+                )
+                print(problem_details)
+            except Exception as e:
+                print(e)
+
+            if (index + 1) < len(problems):
+                print(
+                    "====================================================================================================="
+                )
 
     if plans:
         for index, plan in enumerate(plans):
@@ -95,6 +113,13 @@ if __name__ == "__main__":
         type=str,
         default=os.getenv("LEETCODE_SESSION"),
         help="LeetCode session cookie",
+    )
+    parser.add_argument(
+        "--problems",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Slugs of the problems to fetch",
     )
     parser.add_argument(
         "--plans",
