@@ -50,7 +50,7 @@ class TestLeetCode:
             "get_study_plan_details",
             return_value=mock_study_plan_details,
         ), patch.object(
-            leetcode, "_fetch_and_store_problem", return_value=MagicMock(id=1)
+            leetcode, "fetch_and_store_problem", return_value=MagicMock(id=1)
         ), patch.object(
             leetcode.database, "does_study_plan_exist", return_value=False
         ), patch.object(
